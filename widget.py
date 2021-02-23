@@ -5,6 +5,11 @@ from PyQt5.QtCore import Qt,QDateTime
 from subprocess import Popen
 import json
 
+def hex_to_rgb(value):
+    value = value.lstrip('#')
+    lv = len(value)
+    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
 class Window(QtWidgets.QMainWindow):
     try: BASE_DIR = Path(getattr(sys, "_MEIPASS"))
     except AttributeError: BASE_DIR = Path(__file__).parent 
@@ -53,10 +58,12 @@ class Window(QtWidgets.QMainWindow):
         self.tray_icon.show()
         
         self.time = QtWidgets.QLabel(self)
-        self.time.setStyleSheet("QLabel{color: lightgreen}")
+        temp1 = hex_to_rgb(self.options["font-color"])
+        print("QLabel{{ color: rgb({0}, {1}, {2}) }} ".format(temp1[0], temp1[1], temp1[2]))
+        
+        self.time.setStyleSheet("QLabel{{ color: rgb({0}, {1}, {2}) }} ".format(temp1[0], temp1[1], temp1[2]))
         self.time.setText(self.current_time)
         self.time.adjustSize()
-        self.time.setWindowOpacity(1)
         
         self.time_timer = QtCore.QTimer(self)
         self.time_timer.timeout.connect(self.update_time)

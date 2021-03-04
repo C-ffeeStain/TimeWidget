@@ -3,5 +3,3 @@ build/
 __pycache__/
 
 *.spec
-*.ttf
-*.png

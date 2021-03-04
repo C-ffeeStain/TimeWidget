@@ -1,0 +1,6 @@
+seconds = false
+twelve-hour = true
+
+[font]
+color = "#55aa00"
+size = 15

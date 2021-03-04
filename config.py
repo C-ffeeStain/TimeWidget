@@ -1,4 +1,4 @@
-import sys,json,re
+import sys,toml,re
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt,QDateTime
@@ -9,8 +9,8 @@ def rgb_to_hex(rgb):
 class Window(QtWidgets.QMainWindow):
     try: BASE_DIR = Path(getattr(sys, "_MEIPASS"))
     except AttributeError: BASE_DIR = Path(__file__).parent 
-    with open("config.json") as f:
-        options = json.load(f)
+    with open("config.toml") as f:
+        options = toml.load(f)
     
     def msg(self, title, description, icon = QtWidgets.QMessageBox.Information):
         msgbox = QtWidgets.QMessageBox(self)
@@ -24,16 +24,19 @@ class Window(QtWidgets.QMainWindow):
         text = self.font_size_input.text()
         if not text.isspace() and text != "":
             if not text.isnumeric():
-                self.font_size_input.setText(str(self.options["font-size"]))
+                self.font_size_input.setText(str(self.options["font"]["size"]))
     def save_config(self):
-        with open("config.json", "w") as f:
+        with open("config.toml", "w") as f:
             config = {
-                "font-size": int(self.font_size_input.text()),
                 "seconds": self.seconds_input.isChecked(),
-                "font-color": rgb_to_hex((self.font_color.red(), self.font_color.green(), self.font_color.blue()))
+                "twelve-hour": self.twelve_hour.isChecked(),
+                "font": {
+                    "color": rgb_to_hex((self.font_color.red(), self.font_color.green(), self.font_color.blue())),
+                    "size": int(self.font_size_input.text()),
+                }
             }
-            json.dump(config, f, indent=4, sort_keys=True)
-            self.msg("Success!", "Successfully saved to config.json!").exec_()
+            toml.dump(config, f)
+            self.msg("Success!", "Successfully saved to config.toml!").exec_()
             sys.exit(0)
 
     def get_new_color(self):
@@ -54,7 +57,7 @@ class Window(QtWidgets.QMainWindow):
         temp = self.BASE_DIR / "Montserrat.ttf"
         self.setFont(QtGui.QFont(temp.stem, 12))
         
-        self.font_color = QtGui.QColor(self.options["font-color"])
+        self.font_color = QtGui.QColor(self.options["font"]["color"])
 
         self.title = QtWidgets.QLabel(self)
         self.title.setText("Config for Time Widget")
@@ -64,33 +67,34 @@ class Window(QtWidgets.QMainWindow):
 
         self.font_size_text = QtWidgets.QLabel(self)
         self.font_size_text.setText("Font Size:")
-        self.font_size_text.move(10, 50)
+        self.font_size_text.move(10, 40)
 
         self.font_size_input = QtWidgets.QLineEdit(self)
-        self.font_size_input.setText(str(self.options["font-size"]))
-        self.font_size_input.move(100, 50)
+        self.font_size_input.setText(str(self.options["font"]["size"]))
+        self.font_size_input.move(100, 40)
         self.font_size_input.setMaximumWidth(50)
         self.font_size_input.setMinimumWidth(25)
         self.font_size_input.textChanged.connect(self.check_font_size)
 
-        self.seconds_text = QtWidgets.QLabel(self)
-        self.seconds_text.setText("Show Seconds on Widget:")
-        self.seconds_text.move(10, 80)
-        self.seconds_text.adjustSize()
+        # self.seconds_text = QtWidgets.QLabel(self)
+        # self.seconds_text.setText("Show Seconds on Widget:")
+        # self.seconds_text.move(10, 80)
+        # self.seconds_text.adjustSize()
 
-        self.seconds_input = QtWidgets.QCheckBox(self)
-        self.seconds_input.move(230, 78)
+        self.seconds_input = QtWidgets.QCheckBox("Show Seconds on Widget", self)
+        self.seconds_input.adjustSize()
+        self.seconds_input.move(10, 105)
         self.seconds_input.setChecked(self.options["seconds"])
 
         self.font_color_text = QtWidgets.QLabel(self)
         self.font_color_text.setText("Font Color:")
-        self.font_color_text.move(10, 105)
+        self.font_color_text.move(10, 70)
 
         self.choose_font_color = QtWidgets.QPushButton(self)
         self.choose_font_color.setText("Choose")
         self.choose_font_color.setFont(QtGui.QFont(temp.stem, 10))
         self.choose_font_color.adjustSize()
-        self.choose_font_color.move(140, 109)
+        self.choose_font_color.move(140, 75)
         self.choose_font_color.clicked.connect(self.get_new_color)
 
         self.font_color_img = QtGui.QPixmap(25, 25)
@@ -99,7 +103,12 @@ class Window(QtWidgets.QMainWindow):
         self.font_color_vis = QtWidgets.QLabel(self)
         self.font_color_vis.setPixmap(self.font_color_img)
         self.font_color_vis.adjustSize()
-        self.font_color_vis.move(105, 107)
+        self.font_color_vis.move(105, 75)
+
+        self.twelve_hour = QtWidgets.QCheckBox("Twelve Hour Clock", self)
+        self.twelve_hour.adjustSize()
+        self.twelve_hour.setChecked(self.options["twelve-hour"])
+        self.twelve_hour.move(10, 125)
 
         self.save = QtWidgets.QPushButton(self)
         self.save.setText("Save")

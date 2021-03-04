@@ -1,9 +1,8 @@
-import sys
+import sys,json,toml
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt,QDateTime
 from subprocess import Popen
-import json
 
 def hex_to_rgb(value):
     value = value.lstrip('#')
@@ -14,11 +13,17 @@ class Window(QtWidgets.QMainWindow):
     try: BASE_DIR = Path(getattr(sys, "_MEIPASS"))
     except AttributeError: BASE_DIR = Path(__file__).parent 
     with open("config.json") as f:
-        options = json.load(f)
-    if bool(options["seconds"]):
-        fmt = "h:mm:ss                                  a"
+        options = toml.load(f)
+    if not options["twelve-hour"]:
+        if options["seconds"]:
+            fmt = "hh:mm:ss"
+        else:
+            fmt = "hh:mm"
     else:
-        fmt = "h:mm                                     a"
+        if options["seconds"]:
+            fmt = "h:mm:ss                                  a"
+        else:
+            fmt = "h:mm                                     a"
     current_time = QDateTime.currentDateTime().toLocalTime().toString(fmt)
 
     def open_config(self):
@@ -31,7 +36,7 @@ class Window(QtWidgets.QMainWindow):
         super().__init__()
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.SubWindow)
-        width, height = int(self.options["font-size"] * 6.667), int(self.options["font-size"] * 3.333)
+        width, height = int(self.options["font"]["size"] * 6.667), int(self.options["font"]["size"] * 3.333)
         print(width, height)
         self.setGeometry(400, 400, width, height)
         temp = self.BASE_DIR / "Monserrat.ttf"
@@ -58,7 +63,7 @@ class Window(QtWidgets.QMainWindow):
         self.tray_icon.show()
         
         self.time = QtWidgets.QLabel(self)
-        temp1 = hex_to_rgb(self.options["font-color"])
+        temp1 = hex_to_rgb(self.options["font"]["color"])
         print("QLabel{{ color: rgb({0}, {1}, {2}) }} ".format(temp1[0], temp1[1], temp1[2]))
         
         self.time.setStyleSheet("QLabel{{ color: rgb({0}, {1}, {2}) }} ".format(temp1[0], temp1[1], temp1[2]))

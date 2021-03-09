@@ -1,14 +1,20 @@
-import sys,toml,re
+import sys,toml,re,urllib.request,os
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt,QDateTime
+from updater import self_update
 
 def rgb_to_hex(rgb):
     return '#%02x%02x%02x' % rgb
 
 class Window(QtWidgets.QMainWindow):
+    self_update()
     try: BASE_DIR = Path(getattr(sys, "_MEIPASS"))
-    except AttributeError: BASE_DIR = Path(__file__).parent 
+    except AttributeError: BASE_DIR = Path(__file__).parent
+
+    if not os.path.exists("config.toml"):
+        urllib.request.urlretrieve("https://github.com/C-ffeeStain/TimeWidget/raw/main/config.toml","config.toml")
+
     with open("config.toml") as f:
         options = toml.load(f)
     
@@ -36,11 +42,11 @@ class Window(QtWidgets.QMainWindow):
                 }
             }
             toml.dump(config, f)
-            self.msg("Success!", "Successfully saved to config.toml!").exec_()
-            sys.exit(0)
+        self.msg("Success!", "Successfully saved to config.toml!").exec_()
+        sys.exit(0)
 
     def get_new_color(self):
-        font = QtWidgets.QColorDialog(self).getColor(QtGui.QColor(self.options["font-color"]))
+        font = QtWidgets.QColorDialog(self).getColor(QtGui.QColor(self.options["font"]["color"]))
         if font.isValid():
             self.font_color = font
             self.font_color_img.fill(self.font_color)

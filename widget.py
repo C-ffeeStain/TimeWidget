@@ -1,8 +1,9 @@
-import sys,json,toml
+import sys,json,toml,os,urllib.request
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import Qt,QDateTime
 from subprocess import Popen
+from updater import self_update
 
 def hex_to_rgb(value):
     value = value.lstrip('#')
@@ -10,9 +11,15 @@ def hex_to_rgb(value):
     return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
 
 class Window(QtWidgets.QMainWindow):
+    self_update()
     try: BASE_DIR = Path(getattr(sys, "_MEIPASS"))
-    except AttributeError: BASE_DIR = Path(__file__).parent 
-    with open("config.json") as f:
+    except AttributeError: BASE_DIR = Path(__file__).parent
+
+    # get new config file if one doesn't exist
+    if not os.path.exists("config.toml"):
+        urllib.request.urlretrieve("https://github.com/C-ffeeStain/TimeWidget/raw/main/config.toml","config.toml")
+
+    with open("config.toml") as f:
         options = toml.load(f)
     if not options["twelve-hour"]:
         if options["seconds"]:
@@ -40,7 +47,7 @@ class Window(QtWidgets.QMainWindow):
         print(width, height)
         self.setGeometry(400, 400, width, height)
         temp = self.BASE_DIR / "Monserrat.ttf"
-        self.setFont(QtGui.QFont(temp.stem, self.options["font-size"]))
+        self.setFont(QtGui.QFont(temp.stem, self.options["font"]["size"]))
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.center()
 
